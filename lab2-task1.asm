@@ -4,7 +4,8 @@ ends
 
 code segment
     start:
-    
+    mov ax, data
+    mov ds, ax
     lea dx, disp
     mov ah, 9
     int 21h ; Showing prompt
