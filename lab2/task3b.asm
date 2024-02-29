@@ -8,4 +8,5 @@ code segment
     sub dl, "A"
     add dl, "a"
     int 21h
+    end start
 ends
