@@ -3,7 +3,7 @@
 .MODEL SMALL
 .STACK 100H
 .DATA
-    PROMPT DB "Select type of conversion: $"
+    PROMPT DB "Select type of conversion or type q to quite: $"
     DEC2BIN DB "1. Decimal to Binary $"
     BIN2DEC DB "2. Binary to Decimal $"
     HEX2DEC DB "3. Hexadecimal to Decimal $"
@@ -61,8 +61,11 @@
         LEA DX, ANY
         INT 21H
 
+        MAIN_LOOP:
+
         CALL CRLF
 
+        MOV AH, 9
         LEA DX, PROMPT
         INT 21H
 
@@ -91,19 +94,29 @@
 
         CMP AL, '7'
         JE ANYCONV
+        
+        CMP AL, 'Q'
+        JE EXIT
+
+        CMP AL, 'q'
+        JE EXIT
+
+        JMP INVALID
 
         D2BCONV:
         MOV AH, 9
         LEA DX, DE
         INT 21H
-        MOV DI, 3             ; DIGITS
+        MOV DI, 4             ; DIGITS
         MOV SI, 10            ; BASE
         CALL INPUT            ; INPUT(DI, SI)
+        CMP AX, -1
+        JE INVALID
         CALL CRLF
         MOV CX, 2
         CALL SHOWCONVERTED    ; SHOWCONVERTED(CX, AX)
 
-        JMP EXIT
+        JMP MAIN_LOOP
         B2DCONV:
         MOV AH, 9
         LEA DX, BIN
@@ -111,11 +124,13 @@
         MOV DI, 8             ; DIGITS
         MOV SI, 2             ; BASE
         CALL INPUT            ; INPUT(DI, SI)
+        CMP AX, -1
+        JE INVALID
         CALL CRLF
         MOV CX, 10
         CALL SHOWCONVERTED    ; SHOWCONVERTED(CX, AX)
 
-        JMP EXIT
+        JMP MAIN_LOOP
         H2DCONV:
         MOV AH, 9
         LEA DX, HEX
@@ -123,11 +138,13 @@
         MOV DI, 3             ; DIGITS
         MOV SI, 16             ; BASE
         CALL INPUT            ; INPUT(DI, SI)
+        CMP AX, -1
+        JE INVALID
         CALL CRLF
         MOV CX, 10
         CALL SHOWCONVERTED    ; SHOWCONVERTED(CX, AX)
             
-        JMP EXIT
+        JMP MAIN_LOOP
         D2HCONV:
         MOV AH, 9
         LEA DX, DE
@@ -135,11 +152,13 @@
         MOV DI, 4             ; DIGITS
         MOV SI, 10             ; BASE
         CALL INPUT            ; INPUT(DI, SI)
+        CMP AX, -1
+        JE INVALID
         CALL CRLF
         MOV CX, 16
         CALL SHOWCONVERTED    ; SHOWCONVERTED(CX, AX)
 
-        JMP EXIT
+        JMP MAIN_LOOP
         B2OCONV:
         MOV AH, 9
         LEA DX, BIN
@@ -147,11 +166,13 @@
         MOV DI, 8             ; DIGITS
         MOV SI, 2             ; BASE
         CALL INPUT            ; INPUT(DI, SI)
+        CMP AX, -1
+        JE INVALID
         CALL CRLF
         MOV CX, 8
         CALL SHOWCONVERTED    ; SHOWCONVERTED(CX, AX)
 
-        JMP EXIT
+        JMP MAIN_LOOP
         O2BCONV:
         MOV AH, 9
         LEA DX, OCT
@@ -159,11 +180,13 @@
         MOV DI, 3             ; DIGITS
         MOV SI, 8             ; BASE
         CALL INPUT            ; INPUT(DI, SI)
+        CMP AX, -1
+        JE INVALID
         CALL CRLF
         MOV CX, 2
         CALL SHOWCONVERTED    ; SHOWCONVERTED(CX, AX)
 
-        JMP EXIT
+        JMP MAIN_LOOP
         ANYCONV:
         MOV AH, 9
         LEA DX, INBASE
@@ -171,6 +194,8 @@
         MOV DI, 2
         MOV SI, 10
         CALL INPUT          ; INPUT(DI, SI)
+        CMP AX, -1
+        JE INVALID
         MOV BX, AX          ; BX = BASE OF INPUT NUMBER
         CALL CRLF
         MOV AH, 9
@@ -179,6 +204,8 @@
         MOV DI, 2
         MOV SI, 10
         CALL INPUT          ; INPUT(DI, SI)
+        CMP AX, -1
+        JE INVALID
         MOV CX, AX          ; CX = BASE OF OUTPUT NUMBER
         CALL CRLF
         MOV AH, 9
@@ -187,8 +214,21 @@
         MOV DI, 3
         MOV SI, BX
         CALL INPUT          ; INPUT(DI, SI)
+        CMP AX, -1
+        JE INVALID
         CALL CRLF
         CALL SHOWCONVERTED  ; SHOWCONVERTED(CX, AX)
+
+        JMP MAIN_LOOP
+
+        INVALID:
+        CALL CRLF
+        LEA DX, INVALID_MSG
+        MOV AH, 9
+        INT 21H
+        JMP MAIN_LOOP
+
+        END_MAIN_LOOP:
 
         EXIT:        
         MOV AX, 4C00H
@@ -219,16 +259,16 @@
     MOV AH, 1
     INT 21H
     CMP AL, "0"
-    JL INVALID
+    JL INPUT_ERR
     CMP AL, "9"
     JG L1
     SUB AL, "0"
     JMP END_IF
     L1:
     CMP AL, "A"
-    JL INVALID
+    JL INPUT_ERR
     CMP AL, "F"
-    JG INVALID
+    JG INPUT_ERR
     SUB AL, "A"
     ADD AL, 10
     END_IF:
@@ -248,13 +288,18 @@
     MOV CX, AX
     DEC DI
     JMP RESULT_LOOP
-    INVALID:
-    CALL CRLF
-    MOV AH, 9
-    LEA DX, INVALID_MSG
-    INT 21H
-    CALL CRLF
-    JMP EXIT
+    INPUT_ERR:
+    SUB DI, CX
+    MOV CX, DI
+    CLEAR_STACK:
+    POP AX
+    LOOP CLEAR_STACK
+    MOV AX, -1
+    POP CX
+    POP DI
+    POP DX
+    POP BX
+    RET
     END_RESULT_LOOP:
     MOV AX, BX      ; AX = RESULT (return value)
     POP CX
@@ -304,5 +349,4 @@
     POP AX
     RET
 
-    END MAIN                   
-   
+    END MAIN
