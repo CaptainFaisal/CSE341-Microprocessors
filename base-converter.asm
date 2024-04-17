@@ -4,13 +4,13 @@
 .STACK 100H
 .DATA
     PROMPT DB "Select type of conversion or type q to quite: $"
-    DEC2BIN DB "1. Decimal to Binary $"
-    BIN2DEC DB "2. Binary to Decimal $"
-    HEX2DEC DB "3. Hexadecimal to Decimal $"
-    DEC2HEX DB "4. Decimal to Hexadecimal $"
-    BIN2OCT DB "5. Binary to Octal $"
-    OCT2BIN DB "6. Octal to Binary $"
-    ANY DB "7. Any base to Any base $"
+    DEC2BIN DB "1. Decimal to Binary$"
+    BIN2DEC DB "2. Binary to Decimal$"
+    HEX2DEC DB "3. Hexadecimal to Decimal$"
+    DEC2HEX DB "4. Decimal to Hexadecimal$"
+    BIN2OCT DB "5. Binary to Octal$"
+    OCT2BIN DB "6. Octal to Binary$"
+    ANY DB "7. Any base to Any base$"
     INBASE DB "Enter Base of Input Number: $"
     INP DB "Enter The Number: $"
     OUTBASE DB "Enter Base of Output Number: $"
@@ -19,7 +19,8 @@
     HEX DB "Enter Hexadecimal Number (3 digits): $"
     OCT DB "Enter Octal Number (3 digits): $"
     RESULT DB "Result: $"
-    INVALID_MSG DB "Invalid input! $"
+    INVALID_MSG DB "Invalid input!$"
+    GOODBYE DB "Goodbye!$"
     
 .CODE  
     MAIN PROC
@@ -260,11 +261,12 @@
 
         JMP MAIN_LOOP
 
-        
-
         END_MAIN_LOOP:
 
-        EXIT:        
+        EXIT:
+        MOV AH, 9
+        LEA DX, GOODBYE
+        INT 21H        
         MOV AX, 4C00H
         INT 21H 
         
@@ -287,7 +289,6 @@
     POP DX
     POP AX
     RET
-
 
     INPUT:
     PUSH BX
@@ -353,7 +354,6 @@
     POP DX
     POP BX
     RET
-
 
     SHOWCONVERTED:
     PUSH AX
