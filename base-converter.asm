@@ -101,7 +101,8 @@
         CMP AL, 'q'
         JE EXIT
 
-        JMP INVALID
+        CALL PRNT_INVALID
+        JMP MAIN_LOOP
 
         D2BCONV:
         MOV AH, 9
@@ -111,7 +112,11 @@
         MOV SI, 10            ; BASE
         CALL INPUT            ; INPUT(DI, SI)
         CMP AX, -1
-        JE INVALID
+        JNE C1
+        CALL CRLF
+        CALL PRNT_INVALID
+        JMP MAIN_LOOP
+        C1: 
         CALL CRLF
         MOV CX, 2
         CALL SHOWCONVERTED    ; SHOWCONVERTED(CX, AX)
@@ -125,11 +130,14 @@
         MOV SI, 2             ; BASE
         CALL INPUT            ; INPUT(DI, SI)
         CMP AX, -1
-        JE INVALID
+        JNE C2
+        CALL CRLF
+        CALL PRNT_INVALID
+        JMP MAIN_LOOP
+        C2:
         CALL CRLF
         MOV CX, 10
         CALL SHOWCONVERTED    ; SHOWCONVERTED(CX, AX)
-
         JMP MAIN_LOOP
         H2DCONV:
         MOV AH, 9
@@ -139,7 +147,11 @@
         MOV SI, 16             ; BASE
         CALL INPUT            ; INPUT(DI, SI)
         CMP AX, -1
-        JE INVALID
+        JNE C3
+        CALL CRLF
+        CALL PRNT_INVALID
+        JMP MAIN_LOOP
+        C3:
         CALL CRLF
         MOV CX, 10
         CALL SHOWCONVERTED    ; SHOWCONVERTED(CX, AX)
@@ -153,7 +165,11 @@
         MOV SI, 10             ; BASE
         CALL INPUT            ; INPUT(DI, SI)
         CMP AX, -1
-        JE INVALID
+        JNE C4
+        CALL CRLF
+        CALL PRNT_INVALID
+        JMP MAIN_LOOP
+        C4:
         CALL CRLF
         MOV CX, 16
         CALL SHOWCONVERTED    ; SHOWCONVERTED(CX, AX)
@@ -167,7 +183,11 @@
         MOV SI, 2             ; BASE
         CALL INPUT            ; INPUT(DI, SI)
         CMP AX, -1
-        JE INVALID
+        JNE C5
+        CALL CRLF
+        CALL PRNT_INVALID
+        JMP MAIN_LOOP
+        C5:
         CALL CRLF
         MOV CX, 8
         CALL SHOWCONVERTED    ; SHOWCONVERTED(CX, AX)
@@ -181,7 +201,11 @@
         MOV SI, 8             ; BASE
         CALL INPUT            ; INPUT(DI, SI)
         CMP AX, -1
-        JE INVALID
+        JNE C6
+        CALL CRLF
+        CALL PRNT_INVALID
+        JMP MAIN_LOOP
+        C6:
         CALL CRLF
         MOV CX, 2
         CALL SHOWCONVERTED    ; SHOWCONVERTED(CX, AX)
@@ -195,8 +219,14 @@
         MOV SI, 10
         CALL INPUT          ; INPUT(DI, SI)
         CMP AX, -1
-        JE INVALID
+        JNE C7
+        CALL CRLF
+        CALL PRNT_INVALID
+        CALL CRLF
+        JMP ANYCONV
+        C7:
         MOV BX, AX          ; BX = BASE OF INPUT NUMBER
+        OUTBA:
         CALL CRLF
         MOV AH, 9
         LEA DX, OUTBASE
@@ -205,8 +235,13 @@
         MOV SI, 10
         CALL INPUT          ; INPUT(DI, SI)
         CMP AX, -1
-        JE INVALID
+        JNE C8
+        CALL CRLF
+        CALL PRNT_INVALID
+        JMP OUTBA
+        C8:
         MOV CX, AX          ; CX = BASE OF OUTPUT NUMBER
+        INPNUM:
         CALL CRLF
         MOV AH, 9
         LEA DX, INP
@@ -215,18 +250,17 @@
         MOV SI, BX
         CALL INPUT          ; INPUT(DI, SI)
         CMP AX, -1
-        JE INVALID
+        JNE C9
+        CALL CRLF
+        CALL PRNT_INVALID
+        JMP INPNUM
+        C9:
         CALL CRLF
         CALL SHOWCONVERTED  ; SHOWCONVERTED(CX, AX)
 
         JMP MAIN_LOOP
 
-        INVALID:
-        CALL CRLF
-        LEA DX, INVALID_MSG
-        MOV AH, 9
-        INT 21H
-        JMP MAIN_LOOP
+        
 
         END_MAIN_LOOP:
 
@@ -235,6 +269,12 @@
         INT 21H 
         
     MAIN ENDP
+    
+    PRNT_INVALID:
+    LEA DX, INVALID_MSG
+    MOV AH, 9
+    INT 21H
+    RET
 
     CRLF:
     PUSH AX
@@ -273,6 +313,8 @@
     ADD AL, 10
     END_IF:
     MOV AH, 0
+    CMP AX, SI
+    JGE INPUT_ERR
     PUSH AX
     LOOP INPUT_LOOP
     MOV BX, 0
@@ -292,8 +334,12 @@
     SUB DI, CX
     MOV CX, DI
     CLEAR_STACK:
+    CMP CX, 0
+    JLE END_CLEAR_STACK
     POP AX
-    LOOP CLEAR_STACK
+    DEC CX
+    JMP CLEAR_STACK
+    END_CLEAR_STACK:
     MOV AX, -1
     POP CX
     POP DI
