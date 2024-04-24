@@ -361,6 +361,11 @@
     PUSH CX
     PUSH DX
     MOV BX, 0
+    CMP AX, 0
+    JNE NON_ZERO
+    MOV DL, "0"
+    MOV AH, 2
+    NON_ZERO:
     DIV_LOOP:
     CMP AX, 0
     JLE DIV_END
@@ -384,11 +389,15 @@
     INT 21H
     MOV CX, BX
     PRNT_LOOP:
+    CMP CX, 0
+    JLE PRNT_LOOP_EXIT
     POP BX
     MOV AH, 2
     MOV DL, BL
     INT 21H
-    LOOP PRNT_LOOP
+    DEC CX
+    JMP PRNT_LOOP
+    PRNT_LOOP_EXIT:
     POP DX
     POP CX
     POP BX
