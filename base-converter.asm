@@ -363,8 +363,13 @@
     MOV BX, 0
     CMP AX, 0
     JNE NON_ZERO
+    LEA DX, RESULT
+    MOV AH, 9
+    INT 21H
     MOV DL, "0"
     MOV AH, 2
+    INT 21H
+    JMP PRNT_LOOP_EXIT
     NON_ZERO:
     DIV_LOOP:
     CMP AX, 0
